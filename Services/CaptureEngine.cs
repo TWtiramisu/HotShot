@@ -13,7 +13,7 @@ namespace ScreenshotApp.Services
     {
         public static async Task<string?> CaptureWindowAsync(IntPtr hWnd, string windowTitle, string outputDirectory)
         {
-            if (hWnd == IntPtr.Zero || !NativeMethods.IsWindowVisible(hWnd))
+            if (hWnd == IntPtr.Zero || !NativeMethods.IsWindow(hWnd))
             {
                 return null;
             }
@@ -55,41 +55,78 @@ namespace ScreenshotApp.Services
 
                         try
                         {
-                            // PRIMARY: Capture from Screen DC (GetDC(IntPtr.Zero)) using target window's rect.
-                            // This captures live DWM compositor output for borderless fullscreen games in real-time,
-                            // avoiding the static frame freeze issue caused by GDI PrintWindow.
-                            IntPtr hdcScreen = NativeMethods.GetDC(IntPtr.Zero);
-                            bool capturedFromScreen = false;
+                            bool captured = false;
+                            IntPtr foregroundHwnd = NativeMethods.GetForegroundWindow();
+                            bool isForeground = (hWnd == foregroundHwnd);
 
-                            if (hdcScreen != IntPtr.Zero)
+                            // Primary strategy for Foreground / Active game windows:
+                            // GetDC(IntPtr.Zero) screen BitBlt directly captures GPU/DirectX compositor output
+                            if (isForeground)
                             {
-                                try
+                                IntPtr hdcScreen = NativeMethods.GetDC(IntPtr.Zero);
+                                if (hdcScreen != IntPtr.Zero)
                                 {
-                                    capturedFromScreen = NativeMethods.BitBlt(
-                                        hdcDest, 0, 0, width, height,
-                                        hdcScreen, rect.Left, rect.Top,
-                                        NativeMethods.SRCCOPY | NativeMethods.CAPTUREBLT);
-                                }
-                                finally
-                                {
-                                    NativeMethods.ReleaseDC(IntPtr.Zero, hdcScreen);
+                                    try
+                                    {
+                                        captured = NativeMethods.BitBlt(
+                                            hdcDest, 0, 0, width, height,
+                                            hdcScreen, rect.Left, rect.Top,
+                                            NativeMethods.SRCCOPY | NativeMethods.CAPTUREBLT);
+                                    }
+                                    finally
+                                    {
+                                        NativeMethods.ReleaseDC(IntPtr.Zero, hdcScreen);
+                                    }
                                 }
                             }
 
-                            // FALLBACK: If screen DC failed, fallback to GetWindowDC
-                            if (!capturedFromScreen)
+                            // Secondary strategy: PrintWindow with PW_RENDERFULLCONTENT for background windows
+                            if (!captured)
                             {
-                                IntPtr hdcWindow = NativeMethods.GetWindowDC(hWnd);
                                 try
                                 {
-                                    NativeMethods.BitBlt(
-                                        hdcDest, 0, 0, width, height,
-                                        hdcWindow, 0, 0,
-                                        NativeMethods.SRCCOPY | NativeMethods.CAPTUREBLT);
+                                    captured = NativeMethods.PrintWindow(hWnd, hdcDest, NativeMethods.PW_RENDERFULLCONTENT);
                                 }
-                                finally
+                                catch { }
+                            }
+
+                            // Fallback 1: Screen DC BitBlt for non-foreground windows
+                            if (!captured)
+                            {
+                                IntPtr hdcScreen = NativeMethods.GetDC(IntPtr.Zero);
+                                if (hdcScreen != IntPtr.Zero)
                                 {
-                                    NativeMethods.ReleaseDC(hWnd, hdcWindow);
+                                    try
+                                    {
+                                        captured = NativeMethods.BitBlt(
+                                            hdcDest, 0, 0, width, height,
+                                            hdcScreen, rect.Left, rect.Top,
+                                            NativeMethods.SRCCOPY | NativeMethods.CAPTUREBLT);
+                                    }
+                                    finally
+                                    {
+                                        NativeMethods.ReleaseDC(IntPtr.Zero, hdcScreen);
+                                    }
+                                }
+                            }
+
+                            // Fallback 2: GetWindowDC
+                            if (!captured)
+                            {
+                                IntPtr hdcWindow = NativeMethods.GetWindowDC(hWnd);
+                                if (hdcWindow != IntPtr.Zero)
+                                {
+                                    try
+                                    {
+                                        NativeMethods.BitBlt(
+                                            hdcDest, 0, 0, width, height,
+                                            hdcWindow, 0, 0,
+                                            NativeMethods.SRCCOPY | NativeMethods.CAPTUREBLT);
+                                    }
+                                    finally
+                                    {
+                                        NativeMethods.ReleaseDC(hWnd, hdcWindow);
+                                    }
                                 }
                             }
                         }

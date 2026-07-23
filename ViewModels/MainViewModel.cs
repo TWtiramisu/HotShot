@@ -53,13 +53,6 @@ namespace ScreenshotApp.ViewModels
             _gamepadWatcher.GamepadCombinationPressed += OnGamepadCombinationPressed;
             _gamepadWatcher.GamepadCombinationRecorded += OnGamepadCombinationRecorded;
 
-            // Gate gamepad capture to only fire when this app's window has focus
-            _gamepadWatcher.IsAppFocused = () =>
-            {
-                IntPtr foreground = NativeMethods.GetForegroundWindow();
-                return foreground == _mainWindowHandle;
-            };
-
             _gamepadWatcher.Start();
 
             // Observe recording mode
@@ -153,7 +146,16 @@ namespace ScreenshotApp.ViewModels
         [RelayCommand]
         public async Task TriggerCaptureAsync()
         {
-            if (SelectedWindow == null || !IsFolderConfigured) return;
+            if (!IsFolderConfigured) return;
+
+            // Auto-refresh and select top window if SelectedWindow is missing or closed
+            if (SelectedWindow == null || !NativeMethods.IsWindow(SelectedWindow.Hwnd))
+            {
+                RefreshWindows();
+                SelectedWindow = ActiveWindows.FirstOrDefault();
+            }
+
+            if (SelectedWindow == null) return;
 
             string folder = SettingsVM.SaveFolderPath;
             string? capturedFile = await CaptureEngine.CaptureWindowAsync(SelectedWindow.Hwnd, SelectedWindow.Title, folder);
@@ -351,7 +353,7 @@ namespace ScreenshotApp.ViewModels
             var target = SettingsVM.TargetGamepadButton;
             if (IsCapturing && target != Windows.Gaming.Input.GamepadButtons.None && (buttons & target) == target)
             {
-                Task.Run(async () =>
+                Application.Current.Dispatcher.InvokeAsync(async () =>
                 {
                     await TriggerCaptureAsync();
                 });

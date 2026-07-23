@@ -29,14 +29,25 @@ namespace ScreenshotApp
             // Register default combination hotkey (Ctrl + Alt + S)
             _hotkeyListener.HotkeyPressed += OnHotkeyPressed;
             _hotkeyListener.Register(hwnd, ViewModel.SettingsVM.TargetModifiers, ViewModel.SettingsVM.TargetKey);
+
+            ViewModel.SettingsVM.PropertyChanged += (s, ev) =>
+            {
+                if (ev.PropertyName == nameof(ViewModel.SettingsVM.TargetModifiers) ||
+                    ev.PropertyName == nameof(ViewModel.SettingsVM.TargetKey))
+                {
+                    _hotkeyListener.Register(hwnd, ViewModel.SettingsVM.TargetModifiers, ViewModel.SettingsVM.TargetKey);
+                }
+            };
         }
 
-        private async void OnHotkeyPressed(object? sender, EventArgs e)
+        private void OnHotkeyPressed(object? sender, EventArgs e)
         {
-            if (ViewModel.IsCapturing)
+            if (!ViewModel.IsCapturing) return;
+
+            Dispatcher.InvokeAsync(async () =>
             {
                 await ViewModel.TriggerCaptureAsync();
-            }
+            });
         }
 
         private void MainWindow_KeyDown(object sender, KeyEventArgs e)

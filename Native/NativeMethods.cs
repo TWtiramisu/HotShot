@@ -16,6 +16,9 @@ namespace ScreenshotApp.Native
         public static extern bool IsWindowVisible(IntPtr hWnd);
 
         [DllImport("user32.dll")]
+        public static extern bool IsWindow(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
         public static extern IntPtr GetForegroundWindow();
 
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
@@ -108,6 +111,9 @@ namespace ScreenshotApp.Native
         public static extern bool UnregisterHotKey(IntPtr hWnd, int id);
 
         public const int WM_HOTKEY = 0x0312;
+
+        [DllImport("user32.dll")]
+        public static extern short GetAsyncKeyState(int vKey);
 
         // WinRT Graphics Capture Interop
         [ComImport]
