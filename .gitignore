@@ -1,0 +1,59 @@
+# =========================
+# Visual Studio 暫存與建置檔案
+# =========================
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# =========================
+# Visual Studio 專用檔案
+# =========================
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.dll
+*.exe
+*.pdb
+
+# 專案的使用者設定 (包含 IDE 視窗佈局、中斷點等)
+*.csproj.user
+*.vbproj.user
+*.vcxproj.user
+*.fsproj.user
+
+# =========================
+# NuGet 套件相關
+# =========================
+packages/
+!packages/build/
+**/[Bb]in/Debug/*/
+**/[Bb]in/Release/*/
+**/[Oo]bj/Debug/*/
+**/[Oo]bj/Release/*/
+
+# 忽略 NuGet 還原工具
+[Nn]uGet.exe
+*.nuget.props
+*.nuget.targets
+
+# =========================
+# 備份檔案與其他
+# =========================
+*.bak
+*.tmp
+*.suo
+Thumbs.db
+ehthumbs.db

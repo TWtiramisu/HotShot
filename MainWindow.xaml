@@ -1,0 +1,405 @@
+<Window x:Class="ScreenshotApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:models="clr-namespace:ScreenshotApp.Models"
+        mc:Ignorable="d"
+        Title="截圖？截圖！"
+        Height="720" Width="1100"
+        MinHeight="600" MinWidth="900"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        AllowsTransparency="True"
+        Background="Transparent"
+        WindowStartupLocation="CenterScreen">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="38" ResizeBorderThickness="0" GlassFrameThickness="0" CornerRadius="12" />
+    </WindowChrome.WindowChrome>
+
+    <!-- Main Outer Border with Rounded Corners -->
+    <Border CornerRadius="12" Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" ClipToBounds="True">
+        <Grid>
+            <Grid.RowDefinitions>
+                <!-- Row 0: Custom TitleBar -->
+                <RowDefinition Height="Auto" />
+                <!-- Row 1: Main Content Container -->
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- ==================== ROW 0: CUSTOM TITLEBAR ==================== -->
+            <Grid Grid.Row="0" Height="38" Background="{StaticResource PanelDarkBrush}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Window Title (APP ICON removed per directive) -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
+                    <TextBlock Text="截圖？截圖！" Foreground="{StaticResource TextPrimaryBrush}" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Window Control Buttons -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" WindowChrome.IsHitTestVisibleInChrome="True">
+                    <!-- Settings Button (&#xE713;) -->
+                    <Button Style="{StaticResource IconButton}" 
+                            Command="{Binding OpenSettingsCommand}"
+                            ToolTip="設定" Margin="0,2,2,2">
+                        <TextBlock Text="&#xE713;" FontFamily="{StaticResource SegoeFluentIcons}" FontSize="14"/>
+                    </Button>
+
+                    <!-- Minimize Button -->
+                    <Button Style="{StaticResource IconButton}" Click="MinimizeWindow_Click" ToolTip="最小化" Margin="0,2,2,2">
+                        <TextBlock Text="&#xE921;" FontFamily="{StaticResource SegoeFluentIcons}" FontSize="11"/>
+                    </Button>
+
+                    <!-- Close Button -->
+                    <Button Style="{StaticResource IconButton}" Click="CloseWindow_Click" ToolTip="關閉" Margin="0,2,6,2">
+                        <TextBlock Text="&#xE8BB;" FontFamily="{StaticResource SegoeFluentIcons}" FontSize="11"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- ==================== ROW 1: MAIN CONTENT AREA ==================== -->
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <!-- Column 0: Left Control Panel (280px) -->
+                    <ColumnDefinition Width="280" />
+                    <!-- Column 1: Right Screenshot Gallery (*) -->
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- ==================== LEFT CONTROL PANEL (Column 0) ==================== -->
+                <Border Grid.Column="0" Background="{StaticResource PanelDarkBrush}" 
+                        BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0" Padding="16">
+                    <StackPanel Orientation="Vertical">
+                        
+                        <!-- Section 1: Target Window Selection -->
+                        <TextBlock Text="🎯 目標視窗選取" Foreground="{StaticResource TextPrimaryBrush}" 
+                                   FontSize="14" FontWeight="SemiBold" Margin="0,0,0,10" />
+
+                        <Grid Margin="0,0,0,20">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Target Window ComboBox with DisplayTitle for High-Contrast Readable Titles -->
+                            <ComboBox Grid.Column="0" 
+                                      ItemsSource="{Binding ActiveWindows}"
+                                      SelectedItem="{Binding SelectedWindow}"
+                                      HorizontalAlignment="Stretch"
+                                      DisplayMemberPath="DisplayTitle" />
+
+                            <!-- Refresh Button (&#xE72C;) -->
+                            <Button Grid.Column="1" Style="{StaticResource IconButton}"
+                                    Command="{Binding RefreshWindowsCommand}"
+                                    ToolTip="重新整理視窗清單" Margin="6,0,0,0">
+                                <TextBlock Text="&#xE72C;" FontFamily="{StaticResource SegoeFluentIcons}" FontSize="14" />
+                            </Button>
+                        </Grid>
+
+                        <!-- Section 2: Detection Toggle Switch -->
+                        <TextBlock Text="⚡ 偵測狀態" Foreground="{StaticResource TextPrimaryBrush}" 
+                                   FontSize="14" FontWeight="SemiBold" Margin="0,0,0,10" />
+
+                        <Border Background="{StaticResource CardDarkBrush}" CornerRadius="8" Padding="12" Margin="0,0,0,20"
+                                BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                            <StackPanel Orientation="Vertical">
+                                <Button Style="{StaticResource AccentButtonStyle}"
+                                        Command="{Binding ToggleCaptureCommand}"
+                                        HorizontalAlignment="Stretch" Padding="12">
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <!-- Toggle Icon: &#xE768; (Start) / &#xE769; (Stop) -->
+                                        <TextBlock FontFamily="{StaticResource SegoeFluentIcons}" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Text" Value="&#xE768;" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsCapturing}" Value="True">
+                                                            <Setter Property="Text" Value="&#xE769;" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <TextBlock FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Text" Value="開啟熱鍵偵測" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsCapturing}" Value="True">
+                                                            <Setter Property="Text" Value="停止熱鍵偵測" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </Button>
+
+                                <TextBlock HorizontalAlignment="Center" Margin="0,8,0,0" FontSize="12">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="⚪ 狀態：等待啟用" />
+                                            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsCapturing}" Value="True">
+                                                    <Setter Property="Text" Value="🟢 狀態：正在背景偵測中..." />
+                                                    <Setter Property="Foreground" Value="#4CAF50" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Open Screenshot Folder Button (&#xE8A7;) -->
+                        <Button Style="{StaticResource FluentButtonStyle}"
+                                Command="{Binding OpenFolderCommand}"
+                                HorizontalAlignment="Stretch" Margin="0,0,0,10">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <TextBlock Text="&#xE8A7;" FontFamily="{StaticResource SegoeFluentIcons}" FontSize="15" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="開啟截圖資料夾" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Border>
+
+                <!-- ==================== RIGHT SCREENSHOT GALLERY (Column 1) ==================== -->
+                <Grid Grid.Column="1" Background="{StaticResource BgDarkBrush}" Margin="20">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Gallery Header -->
+                    <TextBlock Grid.Row="0" Text="🖼️ 實時截圖畫廊" Foreground="{StaticResource TextPrimaryBrush}"
+                               FontSize="18" FontWeight="Bold" Margin="0,0,0,16" />
+
+                    <!-- Gallery ScrollViewer & Date Grouping ItemsControl -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <ItemsControl ItemsSource="{Binding GalleryGroups}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type models:GalleryGroup}">
+                                    <StackPanel Orientation="Vertical" Margin="0,0,0,24">
+                                        <!-- Date Title Header -->
+                                        <TextBlock Text="{Binding DateTitle}" Foreground="{StaticResource TextSecondaryBrush}"
+                                                   FontSize="14" FontWeight="SemiBold" Margin="4,0,0,10" />
+
+                                        <!-- STRICT 3-COLUMN UNIFORM GRID FOR SCREENSHOT CARDS -->
+                                        <ItemsControl ItemsSource="{Binding Items}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <UniformGrid Columns="3" HorizontalAlignment="Stretch" />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate DataType="{x:Type models:GalleryItem}">
+                                                    <!-- Gallery Card Container -->
+                                                    <Border Margin="6" CornerRadius="8" Background="{StaticResource CardDarkBrush}"
+                                                            BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                                                            Cursor="Hand" ToolTip="{Binding FileName}"
+                                                            Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}">
+                                                        
+                                                        <!-- Mouse Double Click Event Trigger -->
+                                                        <Border.InputBindings>
+                                                            <MouseBinding MouseAction="LeftDoubleClick"
+                                                                          Command="{Binding DataContext.DoubleClickItemCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                          CommandParameter="{Binding}" />
+                                                        </Border.InputBindings>
+
+                                                        <!-- Modern Styled Fluent Context Menu (Right Click Delete: &#xE74D;) -->
+                                                        <Border.ContextMenu>
+                                                            <ContextMenu>
+                                                                <MenuItem Header="刪除截圖"
+                                                                          Command="{Binding PlacementTarget.Tag.DeleteItemCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                                          CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                                                                    <MenuItem.Icon>
+                                                                        <TextBlock Text="&#xE74D;" FontFamily="{StaticResource SegoeFluentIcons}" Foreground="#FF5252" FontSize="14"/>
+                                                                    </MenuItem.Icon>
+                                                                </MenuItem>
+                                                            </ContextMenu>
+                                                        </Border.ContextMenu>
+
+                                                        <!-- Card Visual Content -->
+                                                        <Grid Height="150" ClipToBounds="True">
+                                                            <Image Source="{Binding Thumbnail}" Stretch="UniformToFill">
+                                                                <Image.RenderTransform>
+                                                                    <ScaleTransform x:Name="imageScale" ScaleX="1.0" ScaleY="1.0" CenterX="100" CenterY="75" />
+                                                                </Image.RenderTransform>
+                                                            </Image>
+
+                                                            <!-- Bottom Gradient Title Overlay -->
+                                                            <Border VerticalAlignment="Bottom" Padding="8,12,8,6">
+                                                                <Border.Background>
+                                                                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                                        <GradientStop Color="#00000000" Offset="0" />
+                                                                        <GradientStop Color="#CC000000" Offset="1" />
+                                                                    </LinearGradientBrush>
+                                                                </Border.Background>
+                                                                <TextBlock Text="{Binding FileName}" Foreground="#FFFFFF" FontSize="11"
+                                                                           TextTrimming="CharacterEllipsis" Margin="2,0,2,0" />
+                                                            </Border>
+                                                        </Grid>
+
+                                                        <!-- Hover Animation Triggers -->
+                                                        <Border.Triggers>
+                                                            <EventTrigger RoutedEvent="Border.MouseEnter">
+                                                                <BeginStoryboard>
+                                                                    <Storyboard>
+                                                                        <DoubleAnimation Storyboard.TargetName="imageScale" Storyboard.TargetProperty="ScaleX" To="1.06" Duration="0:0:0.2" />
+                                                                        <DoubleAnimation Storyboard.TargetName="imageScale" Storyboard.TargetProperty="ScaleY" To="1.06" Duration="0:0:0.2" />
+                                                                    </Storyboard>
+                                                                </BeginStoryboard>
+                                                            </EventTrigger>
+                                                            <EventTrigger RoutedEvent="Border.MouseLeave">
+                                                                <BeginStoryboard>
+                                                                    <Storyboard>
+                                                                        <DoubleAnimation Storyboard.TargetName="imageScale" Storyboard.TargetProperty="ScaleX" To="1.0" Duration="0:0:0.2" />
+                                                                        <DoubleAnimation Storyboard.TargetName="imageScale" Storyboard.TargetProperty="ScaleY" To="1.0" Duration="0:0:0.2" />
+                                                                    </Storyboard>
+                                                                </BeginStoryboard>
+                                                            </EventTrigger>
+                                                        </Border.Triggers>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+
+                <!-- ==================== UNCONFIGURED PATH SAFETY OVERLAY ==================== -->
+                <Border Grid.ColumnSpan="2" 
+                        Background="#DC1A1A1A"
+                        Visibility="{Binding IsFolderConfigured, Converter={StaticResource InverseBoolToVisConverter}}"
+                        Panel.ZIndex="10">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock Text="⚠️ 請先至右上角設定截圖存放資料夾"
+                                   Foreground="#FFCC00" FontSize="20" FontWeight="Bold"
+                                   HorizontalAlignment="Center" Margin="0,0,0,16" />
+                        <TextBlock Text="點擊右上角 &#xE713; 設定按鈕，選擇本地截圖儲存路徑以開啟完整功能"
+                                   Foreground="{StaticResource TextSecondaryBrush}" FontSize="14"
+                                   HorizontalAlignment="Center" Margin="0,0,0,24" />
+                        <Button Style="{StaticResource AccentButtonStyle}"
+                                Command="{Binding OpenSettingsCommand}"
+                                HorizontalAlignment="Center" Padding="20,10">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE713;" FontFamily="{StaticResource SegoeFluentIcons}" FontSize="15" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="立即前往設定" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Border>
+
+                <!-- ==================== IN-WINDOW SETTINGS OVERLAY PANEL ==================== -->
+                <Grid Grid.ColumnSpan="2" 
+                      Background="#F5222222"
+                      Visibility="{Binding IsSettingsOpen, Converter={StaticResource BoolToVisConverter}}"
+                      Panel.ZIndex="20">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Settings Header with Back Button (&#xE72B; Icon Fix) -->
+                    <Border Grid.Row="0" Background="{StaticResource PanelDarkBrush}" Padding="16,12" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
+                        <Grid>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <!-- Back Button with verified Segoe Fluent Icons Back Arrow (&#xE72B;) -->
+                                <Button Style="{StaticResource IconButton}" 
+                                        Command="{Binding CloseSettingsCommand}"
+                                        ToolTip="返回主頁" Margin="0,0,14,0">
+                                    <TextBlock Text="&#xE72B;" FontFamily="{StaticResource SegoeFluentIcons}" FontSize="16" />
+                                </Button>
+                                <TextBlock Text="⚙️ 設定頁面" Foreground="{StaticResource TextPrimaryBrush}" FontSize="18" FontWeight="Bold" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Settings Content -->
+                    <ScrollViewer Grid.Row="1" Padding="40,30" VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel MaxWidth="640" HorizontalAlignment="Left">
+                            
+                            <!-- Setting 1: Screenshot Storage Folder -->
+                            <Border Background="{StaticResource CardDarkBrush}" CornerRadius="8" Padding="20" Margin="0,0,0,20"
+                                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                                <StackPanel>
+                                    <TextBlock Text="📁 截圖儲存資料夾" Foreground="{StaticResource TextPrimaryBrush}" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,8" />
+                                    <TextBlock Text="所擷取的 PNG 圖片將會自動儲存於此目錄中" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" Margin="0,0,0,14" />
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- Path Box -->
+                                        <TextBox Grid.Column="0" Text="{Binding SettingsVM.SaveFolderPath, UpdateSourceTrigger=PropertyChanged}"
+                                                 Background="{StaticResource BgDarkBrush}" Foreground="{StaticResource TextPrimaryBrush}"
+                                                 BorderBrush="{StaticResource BorderBrush}" Padding="10,8" FontSize="13" VerticalAlignment="Center" IsReadOnly="True" />
+
+                                        <!-- Browse Button (&#xE838;) -->
+                                        <Button Grid.Column="1" Style="{StaticResource FluentButtonStyle}"
+                                                Command="{Binding SettingsVM.BrowseFolderCommand}"
+                                                Margin="10,0,0,0" Padding="14,8">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="&#xE838;" FontFamily="{StaticResource SegoeFluentIcons}" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="瀏覽" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Setting 2: Keyboard Hotkey Recording -->
+                            <Border Background="{StaticResource CardDarkBrush}" CornerRadius="8" Padding="20" Margin="0,0,0,20"
+                                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                                <StackPanel>
+                                    <TextBlock Text="⌨️ 鍵盤熱鍵設定" Foreground="{StaticResource TextPrimaryBrush}" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,8" />
+                                    <TextBlock Text="設定全域截圖快捷組合鍵（點擊下方按鈕進行動態錄製）" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" Margin="0,0,0,14" />
+
+                                    <Button Style="{StaticResource FluentButtonStyle}"
+                                            Command="{Binding SettingsVM.StartRecordKeyboardCommand}"
+                                            HorizontalAlignment="Left" Padding="16,10">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="⌨️ " FontSize="14" VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding SettingsVM.KeyboardHotkeyText}" FontWeight="SemiBold" FontSize="14" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Setting 3: Gamepad Hotkey Recording -->
+                            <Border Background="{StaticResource CardDarkBrush}" CornerRadius="8" Padding="20" Margin="0,0,0,20"
+                                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                                <StackPanel>
+                                    <TextBlock Text="🎮 手把熱鍵設定" Foreground="{StaticResource TextPrimaryBrush}" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,8" />
+                                    <TextBlock Text="支援 Xbox / DirectInput 手把按鍵與 Home/Guide 鍵偵測錄製" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" Margin="0,0,0,14" />
+
+                                    <Button Style="{StaticResource FluentButtonStyle}"
+                                            Command="{Binding SettingsVM.StartRecordGamepadCommand}"
+                                            HorizontalAlignment="Left" Padding="16,10">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="🎮 " FontSize="14" VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding SettingsVM.GamepadHotkeyText}" FontWeight="SemiBold" FontSize="14" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>
