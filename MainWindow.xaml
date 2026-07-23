@@ -38,7 +38,7 @@
 
                 <!-- Window Title (APP ICON removed per directive) -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
-                    <TextBlock Text="截圖？截圖！" Foreground="{StaticResource TextPrimaryBrush}" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <TextBlock Text="快捷？快擷！" Foreground="{StaticResource TextPrimaryBrush}" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <!-- Window Control Buttons -->
@@ -177,7 +177,7 @@
                     </Grid.RowDefinitions>
 
                     <!-- Gallery Header -->
-                    <TextBlock Grid.Row="0" Text="實時截圖畫廊" Foreground="{StaticResource TextPrimaryBrush}"
+                    <TextBlock Grid.Row="0" Text="實時截圖預覽" Foreground="{StaticResource TextPrimaryBrush}"
                                FontSize="18" FontWeight="Bold" Margin="0,0,0,16" />
 
                     <!-- Gallery ScrollViewer & Date Grouping ItemsControl -->
