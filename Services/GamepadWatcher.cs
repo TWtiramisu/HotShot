@@ -5,10 +5,29 @@ using Windows.Gaming.Input;
 
 namespace ScreenshotApp.Services
 {
+    /// <summary>
+    /// Monitors Xbox gamepad input in a background polling loop.
+    /// Supports combination hotkey recording and focus-aware capture triggering.
+    ///
+    /// Recording logic (on-release):
+    ///   When IsRecordingMode is true, collects the maximum button combination
+    ///   held during the press, then fires GamepadCombinationRecorded only AFTER
+    ///   all buttons have been fully released (prevents accidental re-triggers).
+    ///
+    /// Capture trigger logic (focus-gated):
+    ///   GamepadCombinationPressed is only fired when IsAppFocused returns true,
+    ///   ensuring the hotkey does not fire when other apps have focus.
+    /// </summary>
     public class GamepadWatcher
     {
+        /// <summary>Fired when a matching combination is fully pressed (in non-recording mode).</summary>
         public event EventHandler<GamepadButtons>? GamepadCombinationPressed;
+
+        /// <summary>Fired when a new hotkey combination has been recorded and all buttons released.</summary>
         public event EventHandler<GamepadButtons>? GamepadCombinationRecorded;
+
+        /// <summary>Delegate used by MainViewModel to provide real-time focus state.</summary>
+        public Func<bool>? IsAppFocused { get; set; }
 
         private Gamepad? _activeGamepad;
         private bool _isListening;
@@ -60,6 +79,9 @@ namespace ScreenshotApp.Services
 
         private async Task PollGamepadLoop()
         {
+            GamepadButtons recordingMaxCombo = GamepadButtons.None;
+            bool waitingForRelease = false;
+
             while (_isListening)
             {
                 if (_activeGamepad != null)
@@ -71,29 +93,51 @@ namespace ScreenshotApp.Services
 
                         if (_isRecordingMode)
                         {
-                            if (currentButtons != GamepadButtons.None)
+                            if (!waitingForRelease)
                             {
-                                // Wait briefly to collect multi-button combinations (e.g. LB + RB)
-                                GamepadButtons maxCombo = currentButtons;
-                                for (int i = 0; i < 6; i++)
+                                // Phase 1: Accumulate pressed buttons into max combo
+                                if (currentButtons != GamepadButtons.None)
                                 {
-                                    await Task.Delay(20);
-                                    var currentReading = _activeGamepad.GetCurrentReading();
-                                    maxCombo |= currentReading.Buttons;
+                                    recordingMaxCombo |= currentButtons;
                                 }
+                                else if (recordingMaxCombo != GamepadButtons.None)
+                                {
+                                    // All buttons released with a valid combo captured → enter wait-for-release phase
+                                    // We need to confirm all buttons are truly released for one more tick
+                                    waitingForRelease = true;
+                                }
+                            }
+                            else
+                            {
+                                // Phase 2: Confirm all buttons are released before firing the recording event
+                                if (currentButtons == GamepadButtons.None)
+                                {
+                                    var recorded = recordingMaxCombo;
+                                    recordingMaxCombo = GamepadButtons.None;
+                                    waitingForRelease = false;
 
-                                GamepadCombinationRecorded?.Invoke(this, maxCombo);
-                                _isRecordingMode = false;
-                                _lastButtons = maxCombo;
+                                    GamepadCombinationRecorded?.Invoke(this, recorded);
+                                    _isRecordingMode = false;
+                                    _lastButtons = GamepadButtons.None;
+                                }
                             }
                         }
                         else
                         {
-                            // Trigger when a new button combination press starts
+                            // Reset recording state when not in recording mode
+                            recordingMaxCombo = GamepadButtons.None;
+                            waitingForRelease = false;
+
+                            // Trigger capture on newly pressed buttons (rising edge detection)
                             var newlyPressed = currentButtons & ~_lastButtons;
                             if (newlyPressed != GamepadButtons.None)
                             {
-                                GamepadCombinationPressed?.Invoke(this, currentButtons);
+                                // Only trigger if our app has focus
+                                bool appHasFocus = IsAppFocused?.Invoke() ?? false;
+                                if (appHasFocus)
+                                {
+                                    GamepadCombinationPressed?.Invoke(this, currentButtons);
+                                }
                             }
 
                             _lastButtons = currentButtons;
@@ -105,7 +149,7 @@ namespace ScreenshotApp.Services
                     }
                 }
 
-                await Task.Delay(16); // High frequency polling (~60Hz) for instant background response
+                await Task.Delay(16); // ~60 Hz polling
             }
         }
 

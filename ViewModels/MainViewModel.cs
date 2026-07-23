@@ -52,6 +52,14 @@ namespace ScreenshotApp.ViewModels
             // Initialize Gamepad Listener
             _gamepadWatcher.GamepadCombinationPressed += OnGamepadCombinationPressed;
             _gamepadWatcher.GamepadCombinationRecorded += OnGamepadCombinationRecorded;
+
+            // Gate gamepad capture to only fire when this app's window has focus
+            _gamepadWatcher.IsAppFocused = () =>
+            {
+                IntPtr foreground = NativeMethods.GetForegroundWindow();
+                return foreground == _mainWindowHandle;
+            };
+
             _gamepadWatcher.Start();
 
             // Observe recording mode
