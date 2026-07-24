@@ -221,7 +221,7 @@ namespace ScreenshotApp.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"刪除截圖失敗：{ex.Message}", "錯誤", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"刪除擷圖失敗：{ex.Message}", "錯誤", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

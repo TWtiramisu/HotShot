@@ -72,7 +72,7 @@ namespace ScreenshotApp.ViewModels
         {
             var dialog = new Microsoft.Win32.OpenFolderDialog
             {
-                Title = "選擇截圖儲存資料夾"
+                Title = "選擇擷圖儲存資料夾"
             };
 
             if (!string.IsNullOrWhiteSpace(SaveFolderPath) && Directory.Exists(SaveFolderPath))

@@ -73,9 +73,9 @@ namespace ScreenshotApp.Services
         {
             long now = DateTime.UtcNow.Ticks;
             long last = Interlocked.Read(ref _lastTriggerTicks);
-            if (now - last < TimeSpan.FromMilliseconds(300).Ticks)
+            if (now - last < TimeSpan.FromMilliseconds(30).Ticks)
             {
-                return; // Suppress duplicate triggers within 300ms window
+                return; // Suppress duplicate triggers within 30ms window
             }
             Interlocked.Exchange(ref _lastTriggerTicks, now);
             HotkeyPressed?.Invoke(this, EventArgs.Empty);

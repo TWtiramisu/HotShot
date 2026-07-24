@@ -11,6 +11,8 @@ namespace ScreenshotApp.Services
 {
     public static class CaptureEngine
     {
+        private static int _sequenceCounter;
+
         public static async Task<string?> CaptureWindowAsync(IntPtr hWnd, string windowTitle, string outputDirectory)
         {
             if (hWnd == IntPtr.Zero || !NativeMethods.IsWindow(hWnd))
@@ -136,15 +138,16 @@ namespace ScreenshotApp.Services
                         }
                     }
 
-                    // Format filename: <window_name>_<timestamp_YYYYMMDD.HHmmSS.fff>.png
+                    // Format filename: <window_name>_<timestamp_YYYYMMDD.HHmmSS.fff>_<seq>.png
                     string safeWindowName = SanitizeFileName(windowTitle);
                     if (string.IsNullOrWhiteSpace(safeWindowName))
                     {
                         safeWindowName = "Window";
                     }
 
+                    int seq = System.Threading.Interlocked.Increment(ref _sequenceCounter) % 10000;
                     string timestamp = DateTime.Now.ToString("yyyyMMdd.HHmmssfff");
-                    string fileName = $"{safeWindowName}_{timestamp}.png";
+                    string fileName = $"{safeWindowName}_{timestamp}_{seq:D4}.png";
                     string fullPath = Path.Combine(outputDirectory, fileName);
 
                     bitmap.Save(fullPath, ImageFormat.Png);

@@ -163,7 +163,7 @@
                                 HorizontalAlignment="Stretch" Margin="0,0,0,10">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                 <TextBlock Text="&#xE8A7;" FontFamily="{StaticResource SegoeFluentIcons}" FontSize="15" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="開啟截圖資料夾" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                <TextBlock Text="開啟擷圖資料夾" VerticalAlignment="Center" FontWeight="SemiBold"/>
                             </StackPanel>
                         </Button>
                     </StackPanel>
@@ -177,11 +177,11 @@
                     </Grid.RowDefinitions>
 
                     <!-- Gallery Header -->
-                    <TextBlock Grid.Row="0" Text="實時截圖預覽" Foreground="{StaticResource TextPrimaryBrush}"
+                    <TextBlock Grid.Row="0" Text="實時擷圖預覽" Foreground="{StaticResource TextPrimaryBrush}"
                                FontSize="18" FontWeight="Bold" Margin="0,0,0,16" />
 
                     <!-- Gallery ScrollViewer & Date Grouping ItemsControl -->
-                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled">
                         <ItemsControl ItemsSource="{Binding GalleryGroups}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate DataType="{x:Type models:GalleryGroup}">
@@ -216,7 +216,7 @@
                                                         <!-- Modern Styled Fluent Context Menu (Right Click Delete: &#xE74D;) -->
                                                         <Border.ContextMenu>
                                                             <ContextMenu>
-                                                                <MenuItem Header="刪除截圖"
+                                                                <MenuItem Header="刪除擷圖"
                                                                           Command="{Binding PlacementTarget.Tag.DeleteItemCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                                                           CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
                                                                     <MenuItem.Icon>
@@ -283,10 +283,10 @@
                         Visibility="{Binding IsFolderConfigured, Converter={StaticResource InverseBoolToVisConverter}}"
                         Panel.ZIndex="10">
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock Text="⚠️ 請先至右上角設定截圖存放資料夾"
+                        <TextBlock Text="⚠️ 請先至右上角設定擷圖存放資料夾"
                                    Foreground="#FFCC00" FontSize="20" FontWeight="Bold"
                                    HorizontalAlignment="Center" Margin="0,0,0,16" />
-                        <TextBlock Text="點擊右上角 &#xE713; 設定按鈕，選擇本地截圖儲存路徑以開啟完整功能"
+                        <TextBlock Text="點擊右上角 &#xE713; 設定按鈕，選擇本地擷圖儲存路徑以開啟完整功能"
                                    Foreground="{StaticResource TextSecondaryBrush}" FontSize="14"
                                    HorizontalAlignment="Center" Margin="0,0,0,24" />
                         <Button Style="{StaticResource AccentButtonStyle}"
@@ -333,7 +333,7 @@
                             <Border Background="{StaticResource CardDarkBrush}" CornerRadius="8" Padding="20" Margin="0,0,0,20"
                                     BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
                                 <StackPanel>
-                                    <TextBlock Text="📁 截圖儲存資料夾" Foreground="{StaticResource TextPrimaryBrush}" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,8" />
+                                    <TextBlock Text="📁 擷圖儲存資料夾" Foreground="{StaticResource TextPrimaryBrush}" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,8" />
                                     <TextBlock Text="所擷取的 PNG 圖片將會自動儲存於此目錄中" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" Margin="0,0,0,14" />
 
                                     <Grid>
@@ -365,7 +365,7 @@
                                     BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
                                 <StackPanel>
                                     <TextBlock Text="⌨️ 鍵盤熱鍵設定" Foreground="{StaticResource TextPrimaryBrush}" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,8" />
-                                    <TextBlock Text="設定全域截圖快捷組合鍵（點擊下方按鈕進行動態錄製）" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" Margin="0,0,0,14" />
+                                    <TextBlock Text="設定全域擷圖快捷組合鍵（點擊下方按鈕進行動態錄製）" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" Margin="0,0,0,14" />
 
                                     <Button Style="{StaticResource FluentButtonStyle}"
                                             Command="{Binding SettingsVM.StartRecordKeyboardCommand}"
