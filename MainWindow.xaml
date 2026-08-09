@@ -6,6 +6,7 @@
         xmlns:models="clr-namespace:ScreenshotApp.Models"
         mc:Ignorable="d"
         Title="快捷？快擷！"
+        Icon="Resources/hotshot_128px.ico"
         Height="720" Width="1100"
         MinHeight="600" MinWidth="900"
         WindowStyle="None"
