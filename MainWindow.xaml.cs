@@ -17,8 +17,20 @@ namespace ScreenshotApp
             InitializeComponent();
             DataContext = ViewModel;
 
+            TrySetWindowIcon();
+
             Loaded += MainWindow_Loaded;
             KeyDown += MainWindow_KeyDown;
+        }
+
+        private void TrySetWindowIcon()
+        {
+            try
+            {
+                Icon = System.Windows.Media.Imaging.BitmapFrame.Create(
+                    new Uri("pack://application:,,,/Resources/hotshot_128px.ico", UriKind.Absolute));
+            }
+            catch { }
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
