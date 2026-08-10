@@ -19,35 +19,50 @@ namespace ScreenshotApp.Models
 
         public static GalleryItem? CreateFromFile(string filePath)
         {
-            try
+            for (int attempt = 0; attempt < 5; attempt++)
             {
-                if (!File.Exists(filePath)) return null;
-
-                var fileInfo = new FileInfo(filePath);
-                var bitmap = new BitmapImage();
-                
-                using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                try
                 {
-                    bitmap.BeginInit();
-                    bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                    bitmap.StreamSource = stream;
-                    bitmap.DecodePixelWidth = 400; // Optimize decoding size for thumbnail grid
-                    bitmap.EndInit();
+                    if (!File.Exists(filePath)) return null;
+
+                    var fileInfo = new FileInfo(filePath);
+                    if (fileInfo.Length == 0)
+                    {
+                        System.Threading.Thread.Sleep(50);
+                        continue;
+                    }
+
+                    var bitmap = new BitmapImage();
+                    using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    {
+                        bitmap.BeginInit();
+                        bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                        bitmap.StreamSource = stream;
+                        bitmap.DecodePixelWidth = 400; // Optimize decoding size for thumbnail grid
+                        bitmap.EndInit();
+                    }
+                    bitmap.Freeze(); // Freezing allows cross-thread UI access and frees unmanaged stream reference
+
+                    if (bitmap.PixelWidth <= 0 || bitmap.PixelHeight <= 0)
+                    {
+                        System.Threading.Thread.Sleep(50);
+                        continue;
+                    }
+
+                    return new GalleryItem
+                    {
+                        FilePath = filePath,
+                        FileName = fileInfo.Name,
+                        CreatedTime = fileInfo.CreationTime,
+                        Thumbnail = bitmap
+                    };
                 }
-                bitmap.Freeze(); // Freezing allows cross-thread UI access and frees unmanaged stream reference
-
-                return new GalleryItem
+                catch
                 {
-                    FilePath = filePath,
-                    FileName = fileInfo.Name,
-                    CreatedTime = fileInfo.CreationTime,
-                    Thumbnail = bitmap
-                };
+                    System.Threading.Thread.Sleep(50);
+                }
             }
-            catch
-            {
-                return null;
-            }
+            return null;
         }
     }
 }

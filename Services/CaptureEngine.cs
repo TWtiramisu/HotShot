@@ -149,8 +149,15 @@ namespace ScreenshotApp.Services
                     string timestamp = DateTime.Now.ToString("yyyyMMdd.HHmmssfff");
                     string fileName = $"{safeWindowName}_{timestamp}_{seq:D4}.png";
                     string fullPath = Path.Combine(outputDirectory, fileName);
+                    string tempPath = fullPath + ".tmp";
+                    bitmap.Save(tempPath, ImageFormat.Png);
 
-                    bitmap.Save(fullPath, ImageFormat.Png);
+                    if (File.Exists(fullPath))
+                    {
+                        File.Delete(fullPath);
+                    }
+                    File.Move(tempPath, fullPath);
+
                     return fullPath;
                 }
                 catch (Exception ex)
