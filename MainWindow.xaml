@@ -227,10 +227,15 @@
                                                         </Border.ContextMenu>
 
                                                         <!-- Card Visual Content -->
-                                                        <Grid Height="150" ClipToBounds="True">
-                                                            <Image Source="{Binding Thumbnail}" Stretch="UniformToFill">
+                                                        <Grid Height="150" ClipToBounds="True" Background="#141414">
+                                                            <Image Source="{Binding Thumbnail}"
+                                                                   Stretch="UniformToFill"
+                                                                   HorizontalAlignment="Center"
+                                                                   VerticalAlignment="Center"
+                                                                   RenderOptions.BitmapScalingMode="HighQuality"
+                                                                   RenderTransformOrigin="0.5,0.5">
                                                                 <Image.RenderTransform>
-                                                                    <ScaleTransform x:Name="imageScale" ScaleX="1.0" ScaleY="1.0" CenterX="100" CenterY="75" />
+                                                                    <ScaleTransform x:Name="imageScale" ScaleX="1.0" ScaleY="1.0" />
                                                                 </Image.RenderTransform>
                                                             </Image>
 
